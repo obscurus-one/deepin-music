@@ -41,7 +41,7 @@ jobs:
         run: |
           pacman -Q \
             cmake qt6-base dtk6core dtk6gui \
-            dtk6declarative ffmpeg taglib vlc
+            dtk6declarative qt6mpris ffmpeg taglib vlc
 
       - name: Configure
         run: |
@@ -53,16 +53,68 @@ jobs:
         run: |
           cmake --build Build --parallel "$(nproc)"
 
-      - name: Package application
+      - name: Create PKGBUILD
         run: |
-          DESTDIR="$PWD/AppDir" cmake --install Build
-          test -d AppDir/usr
-          tar -C AppDir -czf deepin-music-cachyos.tar.gz .
+          cat > PKGBUILD <<'EOF'
+          pkgname=deepin-music-git
+          pkgver=1.0.0
+          pkgrel=1
+          pkgdesc="Deepin Music player"
+          arch=('x86_64')
+          url="https://github.com/linuxdeepin/deepin-music"
+          license=('GPL-3.0-or-later')
+
+          depends=(
+            qt6-base
+            qt6-svg
+            qt6-multimedia
+            qt6-declarative
+            qt6-5compat
+            dtk6core
+            dtk6gui
+            dtk6declarative
+            qt6mpris
+            ffmpeg
+            icu
+            taglib
+            libxtst
+            vlc
+            sdl2
+            gstreamer
+            gst-plugins-base
+            gst-plugins-good
+            gst-plugins-bad
+            gst-plugins-ugly
+            gst-libav
+          )
+
+          makedepends=(
+            base-devel
+            cmake
+            ninja
+            pkgconf
+          )
+
+          package() {
+            DESTDIR="$pkgdir" cmake --install "$srcdir/Build"
+          }
+          EOF
+
+      - name: Build Arch package
+        run: |
+          makepkg --nodeps --noconfirm
+
+      - name: Verify package
+        run: |
+          PACKAGE="$(find . -maxdepth 1 -name '*.pkg.tar.zst' -print -quit)"
+          test -n "$PACKAGE"
+          pacman -Qip "$PACKAGE"
+          echo "PACKAGE=$PACKAGE" >> "$GITHUB_ENV"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: deepin-music-cachyos-${{ github.sha }}
-          path: deepin-music-cachyos.tar.gz
+          path: "*.pkg.tar.zst"
           if-no-files-found: error
           retention-days: 14
