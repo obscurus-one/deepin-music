@@ -28,7 +28,7 @@ jobs:
             base-devel git cmake ninja pkgconf \
             qt6-base qt6-svg qt6-multimedia \
             qt6-tools qt6-declarative qt6-5compat \
-            dtk6core dtk6gui dtk6declarative \
+            dtk6core qt6mpris dtk6gui dtk6declarative \
             ffmpeg icu taglib libxtst vlc sdl2 \
             gstreamer gst-plugins-base gst-plugins-good \
             gst-plugins-bad gst-plugins-ugly \
