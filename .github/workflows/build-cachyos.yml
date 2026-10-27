@@ -26,7 +26,7 @@ jobs:
           pacman -Syu --noconfirm
           pacman -S --needed --noconfirm \
             base-devel git cmake ninja pkgconf \
-            qt6-base qt6-svg qt6-multimedia \
+            qt6-base qt6-svg qt6-multimedia-ffmpeg \
             qt6-tools qt6-declarative qt6-5compat \
             dtk6core qt6mpris dtk6gui dtk6declarative \
             ffmpeg icu taglib libxtst vlc sdl2 \
@@ -65,44 +65,27 @@ jobs:
           license=('GPL-3.0-or-later')
 
           depends=(
-            qt6-base
-            qt6-svg
-            qt6-multimedia
-            qt6-declarative
-            qt6-5compat
-            dtk6core
-            dtk6gui
-            dtk6declarative
-            qt6mpris
-            ffmpeg
-            icu
-            taglib
-            libxtst
-            vlc
-            sdl2
-            gstreamer
-            gst-plugins-base
-            gst-plugins-good
-            gst-plugins-bad
-            gst-plugins-ugly
-            gst-libav
+            qt6-base qt6-svg qt6-multimedia
+            qt6-declarative qt6-5compat
+            dtk6core dtk6gui dtk6declarative
+            qt6mpris ffmpeg icu taglib libxtst vlc sdl2
+            gstreamer gst-plugins-base gst-plugins-good
+            gst-plugins-bad gst-plugins-ugly gst-libav
           )
 
-          makedepends=(
-            base-devel
-            cmake
-            ninja
-            pkgconf
-          )
+          makedepends=(cmake ninja pkgconf)
 
           package() {
-            DESTDIR="$pkgdir" cmake --install "$srcdir/Build"
+            DESTDIR="$pkgdir" cmake --install "$startdir/Build"
           }
           EOF
 
       - name: Build Arch package
         run: |
-          makepkg --nodeps --noconfirm
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          su builder -s /bin/bash -c \
+            'cd "$GITHUB_WORKSPACE" && makepkg --nodeps --noconfirm'
 
       - name: Verify package
         run: |
